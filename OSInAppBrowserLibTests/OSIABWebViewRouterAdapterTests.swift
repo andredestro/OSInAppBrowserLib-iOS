@@ -135,7 +135,7 @@ private extension OSIABWebViewRouterAdapterTests {
         onBrowserClosed: @escaping (Bool) -> Void = { _ in }
     ) -> OSIABWebViewRouterAdapter {
         .init(
-            options, 
+            options: options, 
             cacheManager: cacheManager,
             callbackHandler: .init(
                 onDelegateURL: { _ in },

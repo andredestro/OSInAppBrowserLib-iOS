@@ -310,9 +310,9 @@ private extension OSIABViewModelTests {
         return .init(
             url: url,
             customHeaders: customHeaders,
-            webView ?? WKWebView(frame: .zero, configuration: configurationModel.toWebViewConfiguration()),
-            scrollViewBounds,
-            customUserAgent,
+            webView: webView ?? WKWebView(frame: .zero, configuration: configurationModel.toWebViewConfiguration()),
+            scrollViewBounces: scrollViewBounds,
+            customUserAgent: customUserAgent,
             uiModel: .init(
                 showURL: showURL,
                 showToolbar: showToolbar,
