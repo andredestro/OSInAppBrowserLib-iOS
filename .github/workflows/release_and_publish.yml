@@ -3,65 +3,52 @@ name: Release and Publish
 on:
   pull_request:
     types: [closed]
-    branches:
-      - 'main'
 
 jobs:
-  post-merge:
-    if: contains(github.event.pull_request.labels.*.name, 'release') && github.event.pull_request.merged == true
+  tag_and_release:
+    if: >-
+      github.event.pull_request.merged == true &&
+      contains(github.event.pull_request.labels.*.name, 'release') &&
+      github.base_ref == 'main'
     runs-on: macos-latest
-
     steps:
-    - name: Checkout Repository
-      uses: actions/checkout@v4
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
 
-    - name: Set up Cocoapods
-      run: gem install cocoapods
+      - name: Get current version from Xcode project
+        id: get_version
+        run: |
+          version=$(./scripts/project_tools.sh version get)
+          echo "version=$version" >> $GITHUB_OUTPUT
 
-    - name: Get new version
-      id: version
-      run: echo "VERSION=$(ruby -e 'puts File.read("./OSInAppBrowserLib.podspec").match(/spec.version.*=.*''(\d+\.\d+\.\d+)''/)[1]')" >> $GITHUB_ENV
+      - name: Get changelog for this version
+        id: changelog
+        run: |
+          version="${{ steps.get_version.outputs.version }}"
+          awk -v ver="$version" '/^## \["ver"\]/, /^## \[/{if ($0 ~ /^## \[/ && NR!=1) exit; print}' docs/CHANGELOG.md | sed '1d' > changes.txt
+          echo 'changelog<<EOF' >> $GITHUB_OUTPUT
+          cat changes.txt >> $GITHUB_OUTPUT
+          echo 'EOF' >> $GITHUB_OUTPUT
 
-    - name: Extract release notes
-      run: sh scripts/extract_release_notes.sh "${{ env.VERSION }}" >> release_notes.md
+      - name: Create tag
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git tag v${{ steps.get_version.outputs.version }}
+          git push origin v${{ steps.get_version.outputs.version }}
 
-    - name: Create Tag
-      id: create_tag
-      run: |
-        # Define the tag name and message
-        TAG_NAME="${{ env.VERSION }}"
-        TAG_MESSAGE="Tag for version ${{ env.VERSION }}"
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: v${{ steps.get_version.outputs.version }}
+          name: v${{ steps.get_version.outputs.version }}
+          body: ${{ steps.changelog.outputs.changelog }}
 
-        # Create the tag
-        git tag -a "$TAG_NAME" -m "$TAG_MESSAGE"
-        git push origin "$TAG_NAME"
-
-        echo "Tag created: $TAG_NAME"
-      env:
-        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-
-    - name: Create Release
-      run: |
-        # Extract the tag name
-        TAG_NAME="${{ env.VERSION }}"
-        RELEASE_NOTES="$(cat release_notes.md)"
-        
-        # Create the release using GitHub CLI
-        gh release create "$TAG_NAME" \
-          --title "$TAG_NAME" \
-          --notes "$RELEASE_NOTES" \
-          "OSInAppBrowserLib.zip"
-
-        echo "Release created for tag: $TAG_NAME"
-      env:
-        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-
-    - name: Deploy to Cocoapods
-      run: pod trunk push ./OSInAppBrowserLib.podspec --allow-warnings
-      env:
-        COCOAPODS_TRUNK_TOKEN: ${{ secrets.COCOAPODS_TRUNK_TOKEN }}
-
-    - name: Delete Release Branch
-      run: git push origin --delete prepare-new-release-${{ env.VERSION }}
-      env:
-        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      - name: Delete source branch
+        if: github.event.pull_request.head.ref != 'main'
+        run: |
+          gh pr delete ${{ github.event.pull_request.head.ref }} --yes
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
