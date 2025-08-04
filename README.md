@@ -1,5 +1,9 @@
 # OSInAppBrowserLib
 
+[![Test Suite](https://github.com/OutSystems/OSInAppBrowserLib-iOS/actions/workflows/test.yml/badge.svg)](https://github.com/OutSystems/OSInAppBrowserLib-iOS/actions/workflows/test.yml)
+[![Quality Gate Status](https://sonarcloud.io/api/project_badges/measure?project=OutSystems_OSInAppBrowserLib-iOS&metric=alert_status&token=edb5ae4f7335334aafac7b0256e7938b2ed06f97)](https://sonarcloud.io/summary/new_code?id=OutSystems_OSInAppBrowserLib-iOS)
+[![Coverage](https://sonarcloud.io/api/project_badges/measure?project=OutSystems_OSInAppBrowserLib-iOS&metric=coverage&token=edb5ae4f7335334aafac7b0256e7938b2ed06f97)](https://sonarcloud.io/summary/new_code?id=OutSystems_OSInAppBrowserLib-iOS)
+
 The `OSInAppBrowserLib-iOS` is a library built using `Swift` that provides a web browser view to load a web page within a Mobile Application. It behaves as a standard web browser and is useful to load untrusted content without risking your application's security.
 
 The `OSIABEngine` structure provides the main features of the Library, which are 3 different ways to open a URL:
