@@ -31,23 +31,19 @@ jobs:
 
       - name: Make scripts executable
         run: |
-          chmod +x scripts/project_tools.sh
-          chmod +x scripts/version.sh
+          chmod +x scripts/*.sh
 
       - name: Bump MARKETING_VERSION, CURRENT_PROJECT_VERSION and update CHANGELOG.md
         id: bump_version
-        run: |
-          scripts/version.sh bump ${{ github.event.inputs.bump }}
+        run: scripts/project_tools.sh version bump ${{ github.event.inputs.bump }}
 
       - name: Set release version variable
         id: set_version
         run: |
-          VERSION=$(scripts/version.sh get)
+          VERSION=$(scripts/project_tools.sh version get)
           echo "version=$VERSION" >> $GITHUB_OUTPUT
 
       - name: Create release branch, commit and push changes
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           VERSION=${{ steps.set_version.outputs.version }}
           BRANCH_NAME="release/v$VERSION"
@@ -57,16 +53,15 @@ jobs:
           git add .
           git commit -m "chore(release): prepare release v$VERSION"
           git push origin "$BRANCH_NAME"
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Ensure 'release' label exists
+        run: gh label create release --color FFD700 --description "Release PRs" || true
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: |
-          gh label create release --color FFD700 --description "Release PRs" || true
 
       - name: Create Pull Request
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           gh pr create \
             --title "Release v${{ steps.set_version.outputs.version }}" \
@@ -74,6 +69,8 @@ jobs:
             --head release/v${{ steps.set_version.outputs.version }} \
             --base main \
             --label release
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Build XCFramework
         run: scripts/project_tools.sh build
@@ -87,7 +84,6 @@ jobs:
           cd release
           zip -r ../$ZIP_NAME .
           cd ..
-        shell: bash
 
       - name: Upload Release Artifact
         uses: actions/upload-artifact@v4
