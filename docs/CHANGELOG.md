@@ -6,6 +6,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [3.0.1] - 2025-08-05
+
+## [3.0.1] - 2025-08-05
+
+## [4.0.0] - 2025-08-05
+
+## [3.1.0] - 2025-08-05
+
 ### Features
 
 - Add support for passing custom headers to `WKWebView` (only for the openInWebView option). [RMET-4287](https://outsystemsrd.atlassian.net/browse/RMET-4287).

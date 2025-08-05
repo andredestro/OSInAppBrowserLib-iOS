@@ -1,0 +1,106 @@
+name: Release
+
+on:
+  pull_request:
+    types: [closed]
+
+env:
+  PROJECT_NAME: OSInAppBrowserLib
+
+jobs:
+  tag_and_release:
+    name: Release and Publish
+    runs-on: macos-latest
+    if: >-
+      github.event.pull_request.merged == true &&
+      contains(github.event.pull_request.labels.*.name, 'release')
+      
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Install Dependencies
+        uses: ./.github/actions/install-dependencies
+        with:
+          tools: gh
+
+      - name: Get current project version
+        id: get_version
+        uses: ./.github/actions/get-xcode-version
+        with:
+          project_name: ${{ env.PROJECT_NAME }}
+
+      - name: Get release notes for this version
+        id: release_notes
+        env:
+          VERSION: ${{ steps.get_version.outputs.version }}
+          CHANGELOG_PATH: ${{ env.CHANGELOG_PATH || 'docs/CHANGELOG.md' }}
+        run: |
+          set -euo pipefail
+          if [ ! -f "$CHANGELOG_PATH" ]; then
+            echo "❌ Changelog file not found: $CHANGELOG_PATH"
+            exit 1
+          fi
+          echo "📜 Extracting release notes for version $VERSION..."
+          release_notes_section=$(awk "/^## \[${version}\]/ {flag=1; next} flag && /^## \\[/ {exit} flag {print}" "$CHANGELOG_PATH" | sed '/^\s*$/d')
+          if [ -n "$release_notes_section" ]; then
+            echo "$release_notes_section"
+            echo 'release_notes<<EOF' >> $GITHUB_OUTPUT
+            echo "$release_notes_section" >> $GITHUB_OUTPUT
+            echo 'EOF' >> $GITHUB_OUTPUT
+          else
+            echo "⚠️ No release notes found for version $version."
+            exit 0
+          fi
+
+      - name: Create tag
+        id: create_tag
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          VERSION: ${{ steps.get_version.outputs.version }}
+        run: |
+          set -euo pipefail
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git tag v$VERSION -m "Release version $VERSION"
+          git push origin v$VERSION
+          echo "Tag v$VERSION created."
+          echo "tag=v$VERSION" >> $GITHUB_OUTPUT
+
+      - name: Build XCFramework
+        id: build_xcframework
+        uses: ./.github/actions/build-xcframework
+        with:
+          project_name: ${{ env.PROJECT_NAME }}
+
+      - name: Create GitHub Release
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          TITLE: ${{ steps.create_tag.outputs.tag }}
+          RELEASE_NOTES: ${{ steps.release_notes.outputs.release_notes }}
+          XCFRAMEWORK_PATH: ${{ steps.build_xcframework.outputs.xcframework_path }}
+        run: |
+          set -euo pipefail
+          gh release create $TITLE \
+            --title "$TITLE" \
+            --notes "$RELEASE_NOTES" \
+            "$XCFRAMEWORK_PATH"
+
+      - name: Delete source branch
+        if: github.event.pull_request.head.ref != 'main'
+        run: git push origin --delete ${{ github.event.pull_request.head.ref }}
+
+  delete_branch_only:
+    name: Delete Source Branch Only
+    runs-on: macos-latest
+    if: >-
+      github.event.pull_request.merged == false &&
+      github.event.pull_request.head.ref != 'main' &&
+      contains(github.event.pull_request.labels.*.name, 'release')
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+      - name: Delete source branch
+        run: git push origin --delete ${{ github.event.pull_request.head.ref }}
