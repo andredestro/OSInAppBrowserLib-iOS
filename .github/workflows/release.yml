@@ -44,14 +44,14 @@ jobs:
             exit 1
           fi
           echo "📜 Extracting release notes for version $VERSION..."
-          release_notes_section=$(awk "/^## \[${version}\]/ {flag=1; next} flag && /^## \\[/ {exit} flag {print}" "$CHANGELOG_PATH" | sed '/^\s*$/d')
+          release_notes_section=$(awk "/^## \[${VERSION}\]/ {flag=1; next} flag && /^## \\[/ {exit} flag {print}" "$CHANGELOG_PATH" | sed '/^\s*$/d')
           if [ -n "$release_notes_section" ]; then
             echo "$release_notes_section"
             echo 'release_notes<<EOF' >> $GITHUB_OUTPUT
             echo "$release_notes_section" >> $GITHUB_OUTPUT
             echo 'EOF' >> $GITHUB_OUTPUT
           else
-            echo "⚠️ No release notes found for version $version."
+            echo "⚠️ No release notes found for version $VERSION."
             exit 0
           fi
 
@@ -75,18 +75,27 @@ jobs:
         with:
           project_name: ${{ env.PROJECT_NAME }}
 
+      - name: Package XCFramework
+        uses: ./.github/actions/package-xcframework
+        id: package
+        with:
+          project_name: ${{ env.PROJECT_NAME }}
+          version: ${{ steps.bump_version.outputs.new_version }}
+          xcframework_path: ${{ steps.build_xcframework.outputs.xcframework_path }}
+          license_path: docs/LICENSE
+
       - name: Create GitHub Release
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           TITLE: ${{ steps.create_tag.outputs.tag }}
           RELEASE_NOTES: ${{ steps.release_notes.outputs.release_notes }}
-          XCFRAMEWORK_PATH: ${{ steps.build_xcframework.outputs.xcframework_path }}
+          ASSET_PATH: ${{ steps.package.outputs.zip_name }}
         run: |
           set -euo pipefail
           gh release create $TITLE \
             --title "$TITLE" \
             --notes "$RELEASE_NOTES" \
-            "$XCFRAMEWORK_PATH"
+            "$ASSET_PATH"
 
       - name: Delete source branch
         if: github.event.pull_request.head.ref != 'main'

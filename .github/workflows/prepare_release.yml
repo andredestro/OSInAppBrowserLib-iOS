@@ -4,13 +4,16 @@ on:
   workflow_dispatch:
     inputs:
       bump:
-        description: 'Version bump type'
-        required: true
+        description: 'Version bump type (ignored if version is set)'
+        required: false
         type: choice
         options:
           - patch
           - minor
           - major
+      version:
+        description: 'Set specific version (e.g., 1.2.3)'
+        required: false
 
 env:
   PROJECT_NAME: OSInAppBrowserLib
@@ -42,24 +45,25 @@ jobs:
         id: bump_version
         env:
           CURRENT_VERSION: ${{ steps.get_version.outputs.version }}
-          BUMP_TYPE: ${{ github.event.inputs.bump }}
+          INPUT_BUMP: ${{ github.event.inputs.bump }}
+          INPUT_VERSION: ${{ github.event.inputs.version }}
         run: |
           set -euo pipefail
           echo "⬆️ Bumping project version..."
-          if [[ "$BUMP_TYPE" =~ ^[0-9]+\.[0-9]+(\.[0-9]+)?$ ]]; then
-            NEW_VERSION="$BUMP_TYPE"
+          if [ -n "$INPUT_VERSION" ]; then
+            NEW_VERSION="$INPUT_VERSION"
           else
-            IFS='.' read -r major minor patch <<< "$CURRENT_VERSION"
-            patch="${patch:-0}"
-            case "$BUMP_TYPE" in
+            IFS='.' read -r MAJOR MINOR PATCH <<< "$CURRENT_VERSION"
+            PATCH="${PATCH:-0}"
+            case "$INPUT_BUMP" in
               major)
-                major=$((major+1)); minor=0; patch=0;;
+                MAJOR=$((MAJOR+1)); MINOR=0; PATCH=0;;
               minor)
-                minor=$((minor+1)); patch=0;;
+                MINOR=$((MINOR+1)); PATCH=0;;
               *)
-                patch=$((patch+1));;
+                PATCH=$((PATCH+1));;
             esac
-            NEW_VERSION="$major.$minor.$patch"
+            NEW_VERSION="$MAJOR.$MINOR.$PATCH"
           fi
           echo "🔢 New version: $NEW_VERSION"
           echo "new_version=$NEW_VERSION" >> $GITHUB_OUTPUT
@@ -141,21 +145,14 @@ jobs:
         with:
           project_name: ${{ env.PROJECT_NAME }}
 
-      - name: Package XCFramework and LICENSE
+      - name: Package XCFramework
+        uses: ./.github/actions/package-xcframework
         id: package
-        env:
-          VERSION: ${{ steps.bump_version.outputs.new_version }}
-          XCFRAMEWORK_PATH: ${{ steps.build_xcframework.outputs.xcframework_path }}
-        run: |
-          set -euo pipefail
-          ZIP_NAME="$PROJECT_NAME-$VERSION.zip"
-          mkdir -p release
-          cp -R $XCFRAMEWORK_PATH release/
-          cp docs/LICENSE release/
-          cd release
-          zip -r ../$ZIP_NAME .
-          echo "✅ Packaged XCFramework and LICENSE into $ZIP_NAME"
-          echo "zip_name=$ZIP_NAME" >> $GITHUB_OUTPUT
+        with:
+          project_name: ${{ env.PROJECT_NAME }}
+          version: ${{ steps.bump_version.outputs.new_version }}
+          xcframework_path: ${{ steps.build_xcframework.outputs.xcframework_path }}
+          license_path: docs/LICENSE
 
       - name: Upload Release Artifact
         uses: actions/upload-artifact@v4

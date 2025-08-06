@@ -1,5 +1,6 @@
 name: Install Dependencies
 description: Checks for Homebrew and installs any missing CLI tools
+
 inputs:
   tools:
     description: Space-separated list of tools to check and install via Homebrew
