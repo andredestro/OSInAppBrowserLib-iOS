@@ -6,6 +6,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+
+### Features
+- TESTE
+
+### Fixes
+
+- **BREAKING:** Fix an issue where the application freezes when 'OpenInExternalBrowser' is called
+
+
 ## [3.2.0] - 2025-08-06
 
 ## [3.1.0] - 2025-08-06

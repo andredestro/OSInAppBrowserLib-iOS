@@ -2,11 +2,8 @@ name: Package XCFramework and LICENSE
 description: Zips the built XCFramework and LICENSE into a versioned release artifact
 
 inputs:
-  project_name:
-    description: The name of the project
-    required: true
-  version:
-    description: The version string (e.g. 1.0.0)
+  package_name:
+    description: The name of the package (e.g., MyLibrary-1.0.0)
     required: true
   xcframework_path:
     description: The path to the built .xcframework
@@ -27,7 +24,7 @@ runs:
       shell: bash
       run: |
         set -euo pipefail
-        ZIP_NAME="${{ inputs.project_name }}-${{ inputs.version }}.zip"
+        ZIP_NAME="${{ inputs.package_name }}.zip"
         mkdir -p release
         cp -R "${{ inputs.xcframework_path }}" release/
         cp "${{ inputs.license_path }}" release/
