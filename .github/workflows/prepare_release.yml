@@ -61,6 +61,7 @@ jobs:
             esac
             NEW_VERSION="$major.$minor.$patch"
           fi
+          echo "🔢 New version: $NEW_VERSION"
           echo "new_version=$NEW_VERSION" >> $GITHUB_OUTPUT
 
       - name: Update project files
@@ -72,7 +73,7 @@ jobs:
         run: |
           set -euo pipefail
           
-          echo "🛠️ Updating MARKETING_VERSION to $NEW_VERSION..."
+          echo "🛠️ Updating MARKETING_VERSION..."
           sed -i '' -E "s/MARKETING_VERSION = [0-9]+\.[0-9]+(\.[0-9]+)?;/MARKETING_VERSION = $NEW_VERSION;/g" "$PBXPROJ"
           echo "🛠️ Updating CURRENT_PROJECT_VERSION..."
           current_proj_version=$(grep -m1 'CURRENT_PROJECT_VERSION =' "$PBXPROJ" | sed -E 's/.*CURRENT_PROJECT_VERSION = ([0-9]+);/\1/')
@@ -80,15 +81,15 @@ jobs:
           sed -i '' -E "s/CURRENT_PROJECT_VERSION = [0-9]+;/CURRENT_PROJECT_VERSION = $new_proj_version;/g" "$PBXPROJ"
           echo "✅ Bumped MARKETING_VERSION to $NEW_VERSION, CURRENT_PROJECT_VERSION to $new_proj_version"
 
-          echo "🛠️ Updating version in podspec to $NEW_VERSION..."
+          echo "🛠️ Updating version in $PODSPEC_FILE..."
           if [ -f "$PODSPEC_FILE" ]; then
-            sed -i '' -E "s/(s.version\s*=\s*\")[0-9]+\.[0-9]+(\.[0-9]+)?(\")/\1$NEW_VERSION\3/" "$PODSPEC_FILE"
+            sed -i '' -E "s/^([[:space:]]*[^[:space:]]+\.version[[:space:]]*=[[:space:]]*['\"])[^'\"]+(['\"])/\1$NEW_VERSION\2/" "$PODSPEC_FILE"
             echo "✅ Podspec version updated to $NEW_VERSION"
           else
             echo "⚠️ Podspec file not found: $PODSPEC_FILE"
           fi
 
-          echo "📝 Updating CHANGELOG.md for version $NEW_VERSION..."
+          echo "📝 Updating $CHANGELOG_PATH..."
           TODAY=$(date +%Y-%m-%d)
           awk -v ver="$NEW_VERSION" -v today="$TODAY" '
             BEGIN { unreleased_found=0 }
@@ -143,7 +144,7 @@ jobs:
       - name: Package XCFramework and LICENSE
         id: package
         env:
-          VERSION: ${{ steps.bump_project_version.outputs.new_version }}
+          VERSION: ${{ steps.bump_version.outputs.new_version }}
           XCFRAMEWORK_PATH: ${{ steps.build_xcframework.outputs.xcframework_path }}
         run: |
           set -euo pipefail
@@ -153,10 +154,11 @@ jobs:
           cp docs/LICENSE release/
           cd release
           zip -r ../$ZIP_NAME .
+          echo "✅ Packaged XCFramework and LICENSE into $ZIP_NAME"
           echo "zip_name=$ZIP_NAME" >> $GITHUB_OUTPUT
 
       - name: Upload Release Artifact
         uses: actions/upload-artifact@v4
         with:
-          name: ${{ env.PROJECT_NAME }} ${{ steps.bump_project_version.outputs.new_version }}
+          name: ${{ env.PROJECT_NAME }} ${{ steps.bump_version.outputs.new_version }}
           path: ${{ steps.package.outputs.zip_name }}

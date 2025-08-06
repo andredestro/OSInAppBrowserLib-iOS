@@ -127,15 +127,19 @@ jobs:
       - name: Comment Test Results
         if: github.event_name == 'pull_request' && always()
         uses: actions/github-script@v7
+        env:
+          XCRESULT_NAME: ${{ steps.unit_tests.outputs.xcresult_name }}
+          PROJECT_NAME: ${{ env.PROJECT_NAME }}
         with:
-          xcresult_name: ${{ steps.unit_tests.outputs.xcresult_name }}
           script: |
             const { execSync } = require('child_process');
+            const fs = require('fs');
+
             let coveragePercentage = 'N/A';
             try {
-              const fs = require('fs');
-              const xcresultName = core.getInput('xcresult_name');
+              const xcresultName = process.env.XCRESULT_NAME;
               const coverageTarget = process.env.COVERAGE_TARGET_FILTER || process.env.PROJECT_NAME;
+              
               if (fs.existsSync(xcresultName)) {
                 const output = execSync(`xcrun xccov view --report "${xcresultName}"`).toString();
                 const match = output.match(new RegExp(`${coverageTarget}.*?([0-9]+\\.[0-9]+%)`));
