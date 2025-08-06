@@ -17,6 +17,10 @@ on:
 
 env:
   PROJECT_NAME: OSInAppBrowserLib
+  PBXPROJ: OSInAppBrowserLib.xcodeproj/project.pbxproj
+  CHANGELOG_PATH: docs/CHANGELOG.md
+  LICENSE_PATH: docs/LICENSE
+  PODSPEC_FILE: OSInAppBrowserLib.podspec
 
 jobs:
   prepare-release:
@@ -70,9 +74,9 @@ jobs:
 
       - name: Update project files
         env:
-          PBXPROJ: ${{ env.PBXPROJ || format('{0}.xcodeproj/project.pbxproj', env.PROJECT_NAME) }}
-          PODSPEC_FILE: ${{ env.PODSPEC_FILE || format('{0}.podspec', env.PROJECT_NAME) }}
-          CHANGELOG_PATH: ${{ env.CHANGELOG_PATH || 'docs/CHANGELOG.md' }}
+          PBXPROJ: ${{ env.PBXPROJ }}
+          PODSPEC_FILE: ${{ env.PODSPEC_FILE }}
+          CHANGELOG_PATH: ${{ env.CHANGELOG_PATH }}
           NEW_VERSION: ${{ steps.bump_version.outputs.new_version }}
         run: |
           set -euo pipefail
@@ -151,7 +155,7 @@ jobs:
         with:
           package_name: ${{ env.PROJECT_NAME }}-${{ steps.bump_version.outputs.new_version }}
           xcframework_path: ${{ steps.build_xcframework.outputs.xcframework_path }}
-          license_path: docs/LICENSE
+          license_path: ${{ env.LICENSE_PATH }}
 
       - name: Upload Release Artifact
         uses: actions/upload-artifact@v4

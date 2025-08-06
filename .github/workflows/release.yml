@@ -3,9 +3,14 @@ name: Release
 on:
   pull_request:
     types: [closed]
-
+    branches:
+      - 'main'
+      
 env:
   PROJECT_NAME: OSInAppBrowserLib
+  CHANGELOG_PATH: docs/CHANGELOG.md
+  LICENSE_PATH: docs/LICENSE
+  PODSPEC_FILE: OSInAppBrowserLib.podspec
 
 jobs:
   tag_and_release:
@@ -25,6 +30,7 @@ jobs:
         uses: ./.github/actions/install-dependencies
         with:
           tools: gh
+          gems: cocoapods
 
       - name: Get current project version
         id: get_version
@@ -36,7 +42,7 @@ jobs:
         id: release_notes
         env:
           VERSION: ${{ steps.get_version.outputs.version }}
-          CHANGELOG_PATH: ${{ env.CHANGELOG_PATH || 'docs/CHANGELOG.md' }}
+          CHANGELOG_PATH: ${{ env.CHANGELOG_PATH }}
         run: |
           set -euo pipefail
           if [ ! -f "$CHANGELOG_PATH" ]; then
@@ -67,7 +73,7 @@ jobs:
         with:
           package_name: ${{ env.PROJECT_NAME }}
           xcframework_path: ${{ steps.build_xcframework.outputs.xcframework_path }}
-          license_path: docs/LICENSE
+          license_path: ${{ env.LICENSE_PATH }}
 
       - name: Create tag
         id: create_tag
@@ -82,12 +88,6 @@ jobs:
           git push origin v$VERSION
           echo "Tag v$VERSION created."
           echo "tag=v$VERSION" >> $GITHUB_OUTPUT
-
-      - name: Set default repo for gh CLI
-        env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }} # <- aqui está a chave
-        run: |
-          gh repo set-default andredestro/OSInAppBrowserLib-iOS
           
       - name: Create GitHub Release
         env:
@@ -101,6 +101,19 @@ jobs:
             --title "$TITLE" \
             --notes "$RELEASE_NOTES" \
             "$ASSET_PATH"
+
+      - name: Publish Pod
+        if: hashFiles('${{ env.PODSPEC_FILE }}') != ''
+        env:
+          COCOAPODS_TRUNK_TOKEN: ${{ secrets.COCOAPODS_TRUNK_TOKEN }}
+        run: |
+          set -euo pipefail
+          if [ -z "${COCOAPODS_TRUNK_TOKEN:-}" ]; then
+            echo "❌ COCOAPODS_TRUNK_TOKEN secret is not set. Please set it in your repository secrets."
+            exit 1
+          fi
+          echo "🚀 Deploying podspec to CocoaPods..."
+          pod trunk push "$PODSPEC_FILE" --allow-warnings
 
       - name: Delete source branch
         if: github.event.pull_request.head.ref != 'main'
