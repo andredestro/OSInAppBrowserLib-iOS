@@ -6,15 +6,33 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
-## [3.3.0] - 2025-08-06
+### Features
+- Add custom error page for `OpenInWebView` feature (https://outsystemsrd.atlassian.net/browse/RMET-3491).
+- Add `Close` feature (https://outsystemsrd.atlassian.net/browse/RMET-3427).
+- Add `OpenInWebView`'s interface customisations (https://outsystemsrd.atlassian.net/browse/RMET-3489).
+- Add `OpenInWebView`'s event listeners (https://outsystemsrd.atlassian.net/browse/RMET-3430).
+- Add `OpenInWebView`'s features (https://outsystemsrd.atlassian.net/browse/RMET-3425).
+- Add `OpenInSystemBrowser`'s event listeners (https://outsystemsrd.atlassian.net/browse/RMET-3429).
+- Add `OpenInSystemBrowser`'s features (https://outsystemsrd.atlassian.net/browse/RMET-3423).
+- Add `OpenInExternalBrowser` (https://outsystemsrd.atlassian.net/browse/RMET-3421).
+
+### Chores
+- Create `podspec` to enable CocoaPods publish (https://outsystemsrd.atlassian.net/browse/RMET-3578).
+- Add content to `README` (https://outsystemsrd.atlassian.net/browse/RMET-3473).
 
 
+## [3.4.0] - 2025-08-06
 ### Features
 - TESTE
 
 ### Fixes
 
 - **BREAKING:** Fix an issue where the application freezes when 'OpenInExternalBrowser' is called
+
+## [3.3.0] - 2025-08-06
+
+
+
 
 
 ## [3.2.0] - 2025-08-06
