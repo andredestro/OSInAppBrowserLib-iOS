@@ -1,6 +1,6 @@
 Pod::Spec.new do |spec|
   spec.name                   = 'OSInAppBrowserLib'
-  spec.version                = '3.4.0'
+  spec.version                = '4.0.0'
 
   spec.summary                = 'The `OSInAppBrowserLib` is a library that provides a web browser view to load a web page within a Mobile Application.'
   spec.description            = <<-DESC
