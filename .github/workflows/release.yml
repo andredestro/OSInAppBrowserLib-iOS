@@ -44,14 +44,14 @@ jobs:
             exit 1
           fi
           echo "📜 Extracting release notes for version $VERSION..."
-          release_notes_section=$(awk "/^## \[${version}\]/ {flag=1; next} flag && /^## \\[/ {exit} flag {print}" "$CHANGELOG_PATH" | sed '/^\s*$/d')
+          release_notes_section=$(awk "/^## \[${VERSION}\]/ {flag=1; next} flag && /^## \\[/ {exit} flag {print}" "$CHANGELOG_PATH" | sed '/^\s*$/d')
           if [ -n "$release_notes_section" ]; then
             echo "$release_notes_section"
             echo 'release_notes<<EOF' >> $GITHUB_OUTPUT
             echo "$release_notes_section" >> $GITHUB_OUTPUT
             echo 'EOF' >> $GITHUB_OUTPUT
           else
-            echo "⚠️ No release notes found for version $version."
+            echo "⚠️ No release notes found for version $VERSION."
             exit 0
           fi
 
