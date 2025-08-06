@@ -3,7 +3,9 @@ name: Release
 on:
   pull_request:
     types: [closed]
-
+    branches:
+      - 'main'
+      
 env:
   PROJECT_NAME: OSInAppBrowserLib
 
