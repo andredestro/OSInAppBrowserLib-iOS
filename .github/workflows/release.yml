@@ -28,7 +28,7 @@ jobs:
 
       - name: Get current project version
         id: get_version
-        uses: ./.github/actions/get-xcode-version
+        uses: ./.github/actions/get-project-version
         with:
           project_name: ${{ env.PROJECT_NAME }}
 
