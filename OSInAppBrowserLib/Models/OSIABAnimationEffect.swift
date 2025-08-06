@@ -25,4 +25,8 @@ extension OSIABAnimationEffect {
         
         return result
     }
+
+    func xpto() {
+        print("xpto")
+    }
 }
