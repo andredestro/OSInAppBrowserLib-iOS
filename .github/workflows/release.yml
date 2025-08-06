@@ -94,6 +94,9 @@ jobs:
           gh release create $TITLE \
             --title "$TITLE" \
             --notes "$RELEASE_NOTES" \
+            --draft=false \
+            --latest \
+            --verify-tag \
             "$ASSET_PATH"
 
       - name: Delete source branch
