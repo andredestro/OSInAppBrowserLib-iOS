@@ -85,8 +85,7 @@ jobs:
 
       - name: Authenticate and set correct repo
         run: |
-          echo "${{ secrets.GITHUB_TOKEN }}" | gh auth login --with-token
-          gh repo set-default origin
+          gh repo set-default andredestro/OSInAppBrowserLib-iOS
           
       - name: Create GitHub Release
         env:
