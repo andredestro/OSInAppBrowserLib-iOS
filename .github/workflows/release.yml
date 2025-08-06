@@ -83,7 +83,9 @@ jobs:
           echo "Tag v$VERSION created."
           echo "tag=v$VERSION" >> $GITHUB_OUTPUT
 
-      - name: Authenticate and set correct repo
+      - name: Set default repo for gh CLI
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }} # <- aqui está a chave
         run: |
           gh repo set-default andredestro/OSInAppBrowserLib-iOS
           
