@@ -61,6 +61,7 @@ jobs:
             esac
             NEW_VERSION="$major.$minor.$patch"
           fi
+          echo "🔢 New version: $NEW_VERSION"
           echo "new_version=$NEW_VERSION" >> $GITHUB_OUTPUT
 
       - name: Update project files
@@ -153,6 +154,7 @@ jobs:
           cp docs/LICENSE release/
           cd release
           zip -r ../$ZIP_NAME .
+          echo "✅ Packaged XCFramework and LICENSE into $ZIP_NAME"
           echo "zip_name=$ZIP_NAME" >> $GITHUB_OUTPUT
 
       - name: Upload Release Artifact
