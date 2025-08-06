@@ -149,8 +149,7 @@ jobs:
         uses: ./.github/actions/package-xcframework
         id: package
         with:
-          project_name: ${{ env.PROJECT_NAME }}
-          version: ${{ steps.bump_version.outputs.new_version }}
+          package_name: ${{ env.PROJECT_NAME }}-${{ steps.bump_version.outputs.new_version }}
           xcframework_path: ${{ steps.build_xcframework.outputs.xcframework_path }}
           license_path: docs/LICENSE
 
