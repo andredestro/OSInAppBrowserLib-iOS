@@ -6,6 +6,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [5.0.7] - 2025-08-07
+
 ### Fixes
 - Fix custom error page for `OpenInWebView` feature (https://outsystemsrd.atlassian.net/browse/RMET-3491).
 - Fix `Close` feature (https://outsystemsrd.atlassian.net/browse/RMET-3427).
